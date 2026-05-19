@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会员成长体系 - 任务管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; }
+    
+    .layout { display: flex; min-height: 100vh; }
+    
+    .sidebar { width: 220px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: #fff; flex-shrink: 0; }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid #4a5568; }
+    .sidebar-logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .logo-text h1 { font-size: 16px; font-weight: 600; }
+    .logo-text p { font-size: 10px; color: #a0aec0; margin-top: 4px; }
+    
+    .sidebar-menu { padding: 16px 0; }
+    .menu-section { margin-bottom: 16px; }
+    .section-title { padding: 8px 24px; font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+    .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer; transition: background 0.2s; color: #e2e8f0; font-size: 14px; }
+    .menu-item:hover { background: rgba(255,255,255,0.05); }
+    .menu-item.active { background: #4299e1; color: #fff; }
+    .menu-item i { font-size: 16px; width: 20px; text-align: center; }
+    .menu-item span { flex: 1; }
+    
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .header { background: #fff; padding: 16px 32px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+    .breadcrumb { font-size: 14px; color: #666; }
+    .breadcrumb a { color: #1890ff; text-decoration: none; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .notification { position: relative; font-size: 20px; cursor: pointer; }
+    .notification-badge { position: absolute; top: -4px; right: -8px; background: #ff4d4f; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
+    .admin { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #666; }
+    .admin-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1890ff, #096dd9); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; }
+    
+    .content { padding: 24px; padding-left: 32px; overflow-y: auto; flex: 1; }
+    .page-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title h1 { font-size: 24px; color: #333; }
+    
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(135deg, #1890ff, #096dd9); color: #fff; }
+    .btn-primary:hover { box-shadow: 0 4px 12px rgba(24,144,255,0.3); }
+    .btn-success { background: #52c41a; color: #fff; }
+    .btn-success:hover { background: #73d13d; }
+    .btn-warning { background: #faad14; color: #fff; }
+    .btn-warning:hover { background: #ffc53d; }
+    .btn-default { background: #fff; color: #666; border: 1px solid #d9d9d9; }
+    .btn-default:hover { background: #f5f5f5; }
+    
+    .search-bar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .search-input { flex: 1; min-width: 200px; height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
+    .search-input:focus { outline: none; border-color: #1890ff; }
+    .select-box { height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; min-width: 120px; }
+    .select-box:focus { outline: none; border-color: #1890ff; }
+    
+    .table-container { background: #fff; border-radius: 8px; overflow: hidden; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 16px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .table th { background: #fafafa; font-weight: 600; color: #666; }
+    .table tr:hover { background: #fafafa; }
+    
+    .tag { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; color: #fff; }
+    .tag-newbie { background: #52c41a; }
+    .tag-daily { background: #bfbfbf; }
+    .tag-advanced { background: #faad14; }
+    .tag-senior { background: #722ed1; }
+    
+    .status { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; }
+    .status-enabled { background: #f6ffed; color: #52c41a; }
+    .status-disabled { background: #fff2f0; color: #ff4d4f; }
+    
+    .reward { color: #1890ff; font-weight: 500; }
+    
+    .pagination { display: flex; justify-content: flex-end; align-items: center; padding: 16px; gap: 8px; }
+    .pagination-btn { padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer; font-size: 14px; }
+    .pagination-btn:hover:not(.disabled) { border-color: #1890ff; color: #1890ff; }
+    .pagination-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .pagination-btn.disabled { color: #ccc; cursor: not-allowed; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-start; justify-content: center; z-index: 1000; padding: 40px 20px; overflow-y: auto; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { width: 100%; max-width: 800px; background: #fff; border-radius: 8px; padding: 0; margin-bottom: 40px; }
+    
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 16px; font-weight: 600; color: #333; }
+    .modal-close { font-size: 20px; color: #999; cursor: pointer; }
+    
+    .modal-body { padding: 20px; max-height: calc(100vh - 160px); overflow-y: auto; }
+    
+    .config-card { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 4px; padding: 16px; margin-bottom: 16px; }
+    .card-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e8e8e8; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: flex; gap: 16px; }
+    .form-group.full { width: 100%; }
+    .form-group.half { flex: 1; }
+    .form-group.third { flex: 1; }
+    .form-group.fourth { flex: 1; }
+    .form-group.flex-row { display: flex; justify-content: space-between; align-items: center; }
+    
+    .form-label { font-size: 13px; color: #666; display: block; margin-bottom: 8px; }
+    .form-label span { color: #ff4d4f; }
+    
+    .form-input { width: 100%; height: 32px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
+    .form-input:focus { outline: none; border-color: #1890ff; }
+    
+    .form-textarea { width: 100%; height: 80px; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; resize: none; }
+    .form-textarea:focus { outline: none; border-color: #1890ff; }
+    
+    .upload-area { width: 80px; height: 80px; border: 1px dashed #d9d9d9; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
+    .upload-icon { font-size: 20px; color: #999; }
+    .upload-text { font-size: 11px; color: #999; margin-top: 4px; }
+    
+    .toggle-switch { position: relative; width: 44px; height: 22px; background: #d9d9d9; border-radius: 11px; cursor: pointer; transition: background 0.3s; }
+    .toggle-switch.active { background: #1890ff; }
+    .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: left 0.3s; }
+    .toggle-switch.active::after { left: 24px; }
+    
+    .field-list { margin-top: 8px; }
+    .field-item { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .field-item label { font-size: 13px; color: #666; }
+    
+    .modal-footer { padding: 12px 20px; border-top: 1px solid #e8e8e8; display: flex; justify-content: flex-end; gap: 12px; }
+    
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: #fff; padding: 12px 24px; border-radius: 4px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+    .toast.show { opacity: 1; }
+    
+    .tips-section { background: #fffbe6; border-left: 4px solid #faad14; padding: 12px 16px; margin-top: 16px; border-radius: 0 4px 4px 0; }
+    .tips-title { font-size: 13px; font-weight: 600; color: #d48806; margin-bottom: 8px; }
+    .tips-list { list-style: none; padding: 0; }
+    .tips-list li { font-size: 12px; color: #bf8700; margin-bottom: 6px; padding-left: 12px; position: relative; }
+    .tips-list li::before { content: '•'; position: absolute; left: 0; color: #faad14; }
+    
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .search-bar { flex-direction: column; align-items: stretch; }
+      .search-input { min-width: 100%; }
+      .form-row { flex-direction: column; gap: 16px; }
+      .form-group.half, .form-group.third, .form-group.fourth { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-icon">🎯</div>
+          <div class="logo-text">
+            <h1>会员成长体系</h1>
+            <p>任务管理后台系统 v2.0</p>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="sidebar-menu">
+        <div class="menu-section">
+          <div class="section-title">任务管理</div>
+          <div class="menu-item active" onclick="navigateTo('tasks')">
+            <i>📋</i>
+            <span>任务列表</span>
+          </div>
+          <div class="menu-item" onclick="showCreateModal()">
+            <i>➕</i>
+            <span>创建任务</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('categories')">
+            <i>📁</i>
+            <span>分类管理</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('templates')">
+            <i>📄</i>
+            <span>任务模板</span>
+          </div>
+        </div>
+        
+        <div class="menu-section">
+          <div class="section-title">规则引擎</div>
+          <div class="menu-item" onclick="navigateTo('advanced-rules')">
+            <i>⚙️</i>
+            <span>高级规则</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('cycle-rules')">
+            <i>🔄</i>
+            <span>周期规则</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('user-limits')">
+            <i>👥</i>
+            <span>用户限制</span>
+          </div>
+        </div>
+        
+        <div class="menu-section">
+          <div class="section-title">成长值系统</div>
+          <div class="menu-item" onclick="navigateTo('growth-flow')">
+            <i>💧</i>
+            <span>成长值流水</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('level-config')">
+            <i>📊</i>
+            <span>等级配置</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('privilege')">
+            <i>🎁</i>
+            <span>权益管理</span>
+          </div>
+        </div>
+        
+        <div class="menu-section">
+          <div class="section-title">数据分析</div>
+          <div class="menu-item" onclick="navigateTo('task-analysis')">
+            <i>📈</i>
+            <span>任务分析</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('user-analysis')">
+            <i>👤</i>
+            <span>用户分析</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('funnel-analysis')">
+            <i>🔺</i>
+            <span>漏斗分析</span>
+          </div>
+          <div class="menu-item" onclick="navigateTo('retention-analysis')">
+            <i>📉</i>
+            <span>留存分析</span>
+          </div>
+        </div>
+      </nav>
+    </aside>
+    
+    <main class="main-content" id="mainContent">
+      <header class="header">
+        <div class="breadcrumb" id="breadcrumb">
+          <a href="#" onclick="navigateTo('tasks')">首页</a> / <span>任务列表</span>
+        </div>
+        <div class="header-right">
+          <div class="notification">🔔<span class="notification-badge">3</span></div>
+          <div class="admin"><div class="admin-avatar">A</div><span>管理员</span></div>
+        </div>
+      </header>
+      
+      <div class="content" id="pageContent">
+        <div class="page-title">
+          <h1>任务列表</h1>
+          <button class="btn btn-primary" onclick="showCreateModal()">+ 创建任务</button>
+        </div>
+
+        <div class="search-bar">
+          <input type="text" class="search-input" placeholder="搜索任务名称/ID..." id="searchInput" />
+          <select class="select-box" id="categorySelect">
+            <option value="">全部分类</option>
+            <option value="新手任务">新手任务</option>
+            <option value="日常任务">日常任务</option>
+            <option value="进阶任务">进阶任务</option>
+            <option value="高级任务">高级任务</option>
+          </select>
+          <select class="select-box" id="typeSelect">
+            <option value="">全部类型</option>
+            <option value="下单任务">下单任务</option>
+            <option value="金额任务">金额任务</option>
+            <option value="浏览任务">浏览任务</option>
+            <option value="页面访问任务">页面访问任务</option>
+            <option value="问卷任务">问卷任务</option>
+            <option value="分享任务">分享任务</option>
+            <option value="完善资料任务">完善资料任务</option>
+            <option value="签到任务">签到任务</option>
+            <option value="邀请任务">邀请任务</option>
+            <option value="连续任务">连续任务</option>
+            <option value="组合任务">组合任务</option>
+            <option value="场景任务">场景任务</option>
+            <option value="功能开通任务">功能开通任务</option>
+            <option value="会员保持任务">会员保持任务</option>
+            <option value="订单类型任务">订单类型任务</option>
+            <option value="时间时段任务">时间时段任务</option>
+          </select>
+          <select class="select-box" id="statusSelect">
+            <option value="">全部状态</option>
+            <option value="启用">启用</option>
+            <option value="下线">下线</option>
+          </select>
+          <button class="btn btn-primary" onclick="searchTasks()">搜索</button>
+          <button class="btn btn-default" onclick="resetSearch()">重置</button>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>任务ID</th>
+                <th>任务名称</th>
+                <th>任务分类</th>
+                <th>任务类型</th>
+                <th>奖励</th>
+                <th>有效期</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody"></tbody>
+          </table>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="createModal" onclick="hideCreateModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title" id="modalTitle">创建任务</span>
+        <span class="modal-close" onclick="hideCreateModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="config-card">
+          <div class="card-title">基础信息</div>
+          
+          <div class="form-group full">
+            <label class="form-label"><span>*</span>任务分类</label>
+            <select class="select-box" id="formCategory" onchange="onCategoryChange()" style="width: 100%;">
+              <option value="新手任务">新手任务</option>
+              <option value="日常任务">日常任务</option>
+              <option value="进阶任务">进阶任务</option>
+              <option value="高级任务">高级任务</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">任务图标</label>
+            <div class="upload-area" onclick="uploadIcon()">
+              <span class="upload-icon">📷</span>
+              <span class="upload-text">上传图标</span>
+            </div>
+            <span style="font-size: 11px; color: #999; margin-left: 12px;">支持PNG/JPG格式，建议尺寸64x64</span>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label"><span>*</span>任务名称</label>
+            <input type="text" class="form-input" placeholder="例如：月完成8单" id="formName" />
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">任务副标题</label>
+            <input type="text" class="form-input" placeholder="例如：奖励50成长值" id="formSubtitle" />
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">任务描述</label>
+            <textarea class="form-textarea" placeholder="描述任务内容" id="formDescription"></textarea>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label"><span>*</span>任务类型</label>
+            <select class="select-box" id="formType" onchange="onTaskTypeChange()" style="width: 100%;">
+              <option value="下单任务">下单任务</option>
+              <option value="金额任务">金额任务</option>
+              <option value="浏览任务">浏览任务</option>
+              <option value="页面访问任务">页面访问任务</option>
+              <option value="问卷任务">问卷任务</option>
+              <option value="分享任务">分享任务</option>
+              <option value="完善资料任务">完善资料任务</option>
+              <option value="签到任务">签到任务</option>
+              <option value="邀请任务">邀请任务</option>
+              <option value="连续任务">连续任务</option>
+              <option value="组合任务">组合任务</option>
+              <option value="场景任务">场景任务</option>
+              <option value="功能开通任务">功能开通任务</option>
+              <option value="会员保持任务">会员保持任务</option>
+              <option value="订单类型任务">订单类型任务</option>
+              <option value="时间时段任务">时间时段任务</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">排序值</label>
+            <input type="number" class="form-input" value="1" id="formSortOrder" />
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">任务规则配置</div>
+          <div id="ruleConfigFields"></div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">统计周期配置</div>
+          
+          <div class="form-group full">
+            <label class="form-label">周期类型</label>
+            <select class="select-box" id="formCycleType" style="width: 100%;">
+              <option value="一次性">一次性</option>
+              <option value="每日">每日</option>
+              <option value="每周">每周</option>
+              <option value="每月">每月</option>
+              <option value="每年">每年</option>
+            </select>
+          </div>
+
+          <div class="form-group flex-row">
+            <span class="form-label">自动重置</span>
+            <div class="toggle-switch active" id="toggleAutoReset" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="form-group flex-row">
+            <span class="form-label">累计历史进度</span>
+            <div class="toggle-switch" id="toggleHistoryProgress" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="form-group flex-row">
+            <span class="form-label">连续中断清零</span>
+            <div class="toggle-switch active" id="toggleBreakReset" onclick="toggleSwitch(this)"></div>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">奖励配置</div>
+          
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">奖励类型</label>
+              <select class="select-box" id="formRewardType" style="width: 100%;">
+                <option value="成长值">成长值</option>
+                <option value="积分">积分</option>
+                <option value="优惠券">优惠券</option>
+                <option value="现金">现金</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">奖励数值</label>
+              <input type="number" class="form-input" value="50" id="formRewardValue" style="width: 100%;" />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">发放方式</label>
+              <select class="select-box" id="formRewardMethod" style="width: 100%;">
+                <option value="自动发放">自动发放</option>
+                <option value="手动发放">手动发放</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">成长值有效期</div>
+          
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">有效期类型</label>
+              <select class="select-box" id="formValidityType" style="width: 100%;">
+                <option value="永久有效">永久有效</option>
+                <option value="指定天数">指定天数</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">有效期天数</label>
+              <input type="number" class="form-input" value="365" id="formValidityDays" style="width: 100%;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">用户限制</div>
+          
+          <div class="form-group flex-row">
+            <span class="form-label">限制新用户</span>
+            <div class="toggle-switch" id="toggleNewUserOnly" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="form-group flex-row">
+            <span class="form-label">限制老用户</span>
+            <div class="toggle-switch" id="toggleOldUserOnly" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">最低会员等级</label>
+            <select class="select-box" id="formMinLevel" style="width: 100%;">
+              <option value="萌新会员">萌新会员</option>
+              <option value="V1">V1</option>
+              <option value="V2">V2</option>
+              <option value="V3">V3</option>
+              <option value="V4">V4</option>
+              <option value="V5">V5</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">高级规则配置</div>
+          
+          <div class="form-group full">
+            <label class="form-label">时间规则</label>
+            <select class="select-box" id="formTimeRule" style="width: 100%;">
+              <option value="无限制">无限制</option>
+              <option value="工作日">工作日</option>
+              <option value="周末">周末</option>
+              <option value="指定时间段">指定时间段</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">地域规则</label>
+            <select class="select-box" id="formRegionRule" style="width: 100%;">
+              <option value="无限制">无限制</option>
+              <option value="中国大陆">中国大陆</option>
+              <option value="港澳台">港澳台</option>
+              <option value="海外">海外</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="card-title">任务状态</div>
+          <div class="form-group flex-row" style="justify-content: space-between; align-items: center;">
+            <span class="form-label">任务状态</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="toggle-switch active" id="toggleStatus" onclick="toggleSwitch(this)"></div>
+              <span id="statusText" style="color: #52c41a;">启用</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="hideCreateModal()">取消</button>
+        <button class="btn btn-success" onclick="submitTask()">保存任务</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const taskTypes = {
+      '下单任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['单', '次', '笔', '订单'] }
+          ]},
+          { type: 'select', label: '产品类型', key: 'productType', options: ['快车', '专车', '顺风车', '代驾', '货运'], multiple: true },
+          { type: 'toggle', label: '退款失效', key: 'refundInvalid', defaultValue: true },
+          { type: 'toggle', label: '取消失效', key: 'cancelInvalid', defaultValue: true },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '金额任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标金额', key: 'targetAmount', placeholder: '请输入目标金额', defaultValue: 100 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['元', '角'] }
+          ]},
+          { type: 'select', label: '产品类型', key: 'productType', options: ['快车', '专车', '顺风车', '代驾', '货运'], multiple: true },
+          { type: 'toggle', label: '包含优惠金额', key: 'includeDiscount', defaultValue: false },
+          { type: 'toggle', label: '退款失效', key: 'refundInvalid', defaultValue: true },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '浏览任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '浏览时长', key: 'browseDuration', placeholder: '请输入浏览时长(秒)', defaultValue: 10 },
+            { type: 'select', label: '时间单位', key: 'timeUnit', options: ['秒', '分钟'] }
+          ]},
+          { type: 'text', label: '页面路径', key: 'pagePath', placeholder: '请输入页面路径' },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '页面访问任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['秒', '次'] }
+          ]},
+          { type: 'text', label: '页面路径', key: 'pagePath', placeholder: '请输入页面路径' },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '问卷任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['次', '份'] }
+          ]},
+          { type: 'text', label: '问卷链接', key: 'questionnaireLink', placeholder: '请输入问卷链接' },
+          { type: 'toggle', label: '限制一次', key: 'limitOnce', defaultValue: true },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '分享任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['次'] }
+          ]},
+          { type: 'select', label: '分享渠道', key: 'shareChannel', options: ['全部渠道', '微信', 'QQ', '微博', '链接'] },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '完善资料任务': {
+        fields: [
+          { type: 'checkboxes', label: '需要完善的字段', key: 'requiredFields', options: [
+            { value: 'avatar', label: '头像' },
+            { value: 'nickname', label: '昵称' },
+            { value: 'signature', label: '个性签名' },
+            { value: 'age', label: '年龄' },
+            { value: 'gender', label: '性别' },
+            { value: 'tags', label: '标签' }
+          ]}
+        ]
+      },
+      '签到任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['天'] }
+          ]},
+          { type: 'toggle', label: '连续中断清零', key: 'breakReset', defaultValue: true },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '邀请任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '邀请人数', key: 'inviteCount', placeholder: '请输入邀请人数', defaultValue: 3 },
+            { type: 'select', label: '邀请渠道', key: 'inviteChannel', options: ['全部', '微信', 'QQ', '链接'] }
+          ]},
+          { type: 'text', label: '邀请链接', key: 'inviteLink', placeholder: '请输入邀请链接' },
+          { type: 'toggle', label: '好友需完成首单', key: 'requireFirstOrder', defaultValue: false },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '连续任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['天'] }
+          ]},
+          { type: 'toggle', label: '连续中断清零', key: 'breakReset', defaultValue: true },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '组合任务': {
+        fields: [
+          { type: 'text', label: '组合任务规则', key: 'combineRule', placeholder: '请输入组合规则JSON' },
+          { type: 'number', label: '子任务数量', key: 'subTaskCount', placeholder: '请输入子任务数量', defaultValue: 2 },
+          { type: 'select', label: '完成方式', key: 'completeType', options: ['全部完成', '任意完成', '按顺序完成', '指定数量完成'] },
+          { type: 'number', label: '指定完成数量', key: 'requiredCount', placeholder: '请输入需要完成的子任务数量', defaultValue: 1 },
+          { type: 'toggle', label: '允许跳过', key: 'allowSkip', defaultValue: false },
+          { type: 'toggle', label: '允许重试', key: 'allowRetry', defaultValue: true },
+          { type: 'toggle', label: '共享奖励', key: 'shareReward', defaultValue: false }
+        ]
+      },
+      '场景任务': {
+        fields: [
+          { type: 'select', label: '场景条件', key: 'sceneCondition', options: ['无限制', '新用户首次', '活动期间', '特定时段', '特定地域', '特定设备', '特定渠道'] },
+          { type: 'select', label: '触发时机', key: 'triggerTime', options: ['进入页面', '完成操作', '定时触发', '状态变更', '页面停留', '分享成功'] },
+          { type: 'text', label: '页面路径', key: 'pagePath', placeholder: '请输入页面路径，如 /member/index', showIf: { triggerTime: '进入页面' } },
+          { type: 'text', label: '操作类型', key: 'actionType', placeholder: '请输入操作类型', showIf: { triggerTime: '完成操作' } },
+          { type: 'text', label: '定时时间', key: 'scheduleTime', placeholder: 'HH:mm', showIf: { triggerTime: '定时触发' } },
+          { type: 'text', label: '状态字段', key: 'statusField', placeholder: '请输入状态字段名', showIf: { triggerTime: '状态变更' } },
+          { type: 'number', label: '停留时长(秒)', key: 'stayDuration', placeholder: '请输入停留时长', showIf: { triggerTime: '页面停留' }, defaultValue: 10 },
+
+          { type: 'text', label: '活动ID', key: 'activityId', placeholder: '请输入活动ID', showIf: { sceneCondition: '活动期间' } },
+          { type: 'row', items: [
+            { type: 'text', label: '活动开始时间', key: 'activityStartTime', placeholder: 'YYYY-MM-DD HH:mm', showIf: { sceneCondition: '活动期间' } },
+            { type: 'text', label: '活动结束时间', key: 'activityEndTime', placeholder: 'YYYY-MM-DD HH:mm', showIf: { sceneCondition: '活动期间' } }
+          ]},
+          { type: 'row', items: [
+            { type: 'text', label: '时段开始', key: 'timeStart', placeholder: 'HH:mm', showIf: { sceneCondition: '特定时段' } },
+            { type: 'text', label: '时段结束', key: 'timeEnd', placeholder: 'HH:mm', showIf: { sceneCondition: '特定时段' } }
+          ]},
+          { type: 'select', label: '适用星期', key: 'weekDays', options: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], multiple: true, showIf: { sceneCondition: '特定时段' } },
+          { type: 'text', label: '地域列表', key: 'regionList', placeholder: '请输入地域列表，用逗号分隔', showIf: { sceneCondition: '特定地域' } },
+          { type: 'select', label: '设备类型', key: 'deviceType', options: ['全部', 'iOS', 'Android', 'PC', 'H5'], showIf: { sceneCondition: '特定设备' } },
+          { type: 'select', label: '渠道来源', key: 'channelSource', options: ['全部', 'APP', '小程序', 'H5', '公众号', '线下'], showIf: { sceneCondition: '特定渠道' } },
+          { type: 'text', label: '场景参数', key: 'sceneParams', placeholder: '请输入场景参数' },
+          { type: 'toggle', label: '仅首次触发', key: 'firstTriggerOnly', defaultValue: false },
+          { type: 'toggle', label: '允许重复触发', key: 'allowRepeatTrigger', defaultValue: true }
+        ]
+      },
+      '功能开通任务': {
+        fields: [
+          { type: 'checkboxes', label: '需要开通的功能', key: 'requiredFeatures', options: [
+            { value: 'vip', label: 'VIP会员' },
+            { value: 'push', label: '消息推送' },
+            { value: 'pay', label: '支付功能' },
+            { value: 'share', label: '分享功能' },
+            { value: 'collect', label: '收藏功能' },
+            { value: 'comment', label: '评论功能' }
+          ]}
+        ]
+      },
+      '会员保持任务': {
+        fields: [
+          { type: 'select', label: '目标会员等级', key: 'targetLevel', options: ['V1', 'V2', 'V3', 'V4', 'V5'] },
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 30 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['天'] }
+          ]},
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '订单类型任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标订单数', key: 'targetOrderCount', placeholder: '请输入目标订单数', defaultValue: 5 },
+            { type: 'select', label: '产品类型', key: 'productType', options: ['快车', '专车', '顺风车', '代驾', '货运'], multiple: true }
+          ]},
+          { type: 'select', label: '指定运力', key: 'specifiedCapacity', options: ['无限制', '自营运力', '第三方运力'] },
+          { type: 'select', label: '指定车型', key: 'specifiedVehicle', options: ['无限制', '小轿车', 'SUV', '货车', '面包车', '电动车'] },
+          { type: 'toggle', label: '退款失效', key: 'refundInvalid', defaultValue: true },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      },
+      '时间时段任务': {
+        fields: [
+          { type: 'row', items: [
+            { type: 'number', label: '目标值', key: 'targetValue', placeholder: '请输入目标值', defaultValue: 8 },
+            { type: 'select', label: '目标单位', key: 'targetUnit', options: ['次'] }
+          ]},
+          { type: 'select', label: '时段类型', key: 'periodType', options: ['早高峰', '晚高峰', '平峰期', '夜间'] },
+          { type: 'row', items: [
+            { type: 'text', label: '时段开始', key: 'startTime', placeholder: 'HH:mm', defaultValue: '09:00' },
+            { type: 'text', label: '时段结束', key: 'endTime', placeholder: 'HH:mm', defaultValue: '18:00' }
+          ]},
+          { type: 'checkboxes', label: '适用星期', key: 'weekDays', options: [
+            { value: 'monday', label: '周一' },
+            { value: 'tuesday', label: '周二' },
+            { value: 'wednesday', label: '周三' },
+            { value: 'thursday', label: '周四' },
+            { value: 'friday', label: '周五' },
+            { value: 'saturday', label: '周六' },
+            { value: 'sunday', label: '周日' }
+          ]},
+          { type: 'select', label: '指定运力', key: 'specifiedCapacity', options: ['无限制', '自营运力', '第三方运力'] },
+          { type: 'select', label: '指定车型', key: 'specifiedVehicle', options: ['无限制', '小轿车', 'SUV', '货车', '面包车', '电动车'] },
+          { type: 'select', label: '产品类型', key: 'productType', options: ['无限制', '快车', '专车', '顺风车', '代驾'] },
+          { type: 'toggle', label: '允许累计', key: 'allowAccumulate', defaultValue: true }
+        ]
+      }
+    };
+
+    let tasks = [
+      { id: 'T001', name: '月完成8单', category: '进阶任务', type: '下单任务', reward: '+50 成长值', validity: '365天', status: '启用', createTime: '2026-01-15 10:30' },
+      { id: 'T002', name: '消费满100元', category: '日常任务', type: '金额任务', reward: '+30 成长值', validity: '永久', status: '启用', createTime: '2026-01-14 15:20' },
+      { id: 'T003', name: '浏览会员页10秒', category: '日常任务', type: '浏览任务', reward: '+10 成长值', validity: '30天', status: '启用', createTime: '2026-01-13 09:15' },
+      { id: 'T004', name: '完成首单', category: '新手任务', type: '下单任务', reward: '+100 成长值', validity: '永久', status: '启用', createTime: '2026-01-10 14:45' },
+      { id: 'T005', name: '填写满意度问卷', category: '日常任务', type: '问卷任务', reward: '+25 成长值', validity: '7天', status: '下线', createTime: '2026-01-08 11:30' },
+      { id: 'T006', name: '分享给好友', category: '日常任务', type: '分享任务', reward: '+15 成长值', validity: '每日', status: '启用', createTime: '2026-01-07 16:00' },
+      { id: 'T007', name: '完善个人资料', category: '新手任务', type: '完善资料任务', reward: '+20 成长值', validity: '永久', status: '启用', createTime: '2026-01-06 10:30' },
+      { id: 'T008', name: '连续签到7天', category: '日常任务', type: '签到任务', reward: '+35 成长值', validity: '每月', status: '启用', createTime: '2026-01-05 09:00' }
+    ];
+
+    let currentPage = 1;
+    const pageSize = 10;
+    let searchParams = { keyword: '', category: '', type: '', status: '' };
+
+    function renderTasks() {
+      const filtered = filterTasks();
+      const totalPages = Math.ceil(filtered.length / pageSize);
+      const start = (currentPage - 1) * pageSize;
+      const paginatedTasks = filtered.slice(start, start + pageSize);
+
+      const tbody = document.getElementById('taskTableBody');
+      tbody.innerHTML = paginatedTasks.map(task => `
+        <tr>
+          <td>${task.id}</td>
+          <td>${task.name}</td>
+          <td><span class="tag ${getCategoryClass(task.category)}">${task.category}</span></td>
+          <td>${task.type}</td>
+          <td><span class="reward">${task.reward}</span></td>
+          <td>${task.validity}</td>
+          <td><span class="status ${task.status === '启用' ? 'status-enabled' : 'status-disabled'}">${task.status}</span></td>
+          <td>${task.createTime}</td>
+          <td>
+            <button class="btn btn-primary" style="margin-right: 8px;" onclick="editTask('${task.id}')">编辑</button>
+            <button class="btn btn-default" style="margin-right: 8px;" onclick="viewTask('${task.id}')">查看</button>
+            <button class="btn ${task.status === '启用' ? 'btn-warning' : 'btn-success'}" onclick="toggleStatus('${task.id}')">${task.status === '启用' ? '禁用' : '启用'}</button>
+          </td>
+        </tr>
+      `).join('');
+
+      renderPagination(totalPages);
+    }
+
+    function filterTasks() {
+      return tasks.filter(task => {
+        if (searchParams.keyword && !task.name.includes(searchParams.keyword) && !task.id.includes(searchParams.keyword)) return false;
+        if (searchParams.category && task.category !== searchParams.category) return false;
+        if (searchParams.type && task.type !== searchParams.type) return false;
+        if (searchParams.status && task.status !== searchParams.status) return false;
+        return true;
+      });
+    }
+
+    function renderPagination(totalPages) {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = `pagination-btn ${currentPage === 1 ? 'disabled' : ''}`;
+      prevBtn.textContent = '上一页';
+      prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderTasks(); } };
+      pagination.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `pagination-btn ${currentPage === i ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => { currentPage = i; renderTasks(); };
+        pagination.appendChild(pageBtn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = `pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+      nextBtn.textContent = '下一页';
+      nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderTasks(); } };
+      pagination.appendChild(nextBtn);
+    }
+
+    function getCategoryClass(category) {
+      const classes = { '新手任务': 'tag-newbie', '日常任务': 'tag-daily', '进阶任务': 'tag-advanced', '高级任务': 'tag-senior' };
+      return classes[category] || '';
+    }
+
+    function searchTasks() {
+      searchParams = {
+        keyword: document.getElementById('searchInput').value,
+        category: document.getElementById('categorySelect').value,
+        type: document.getElementById('typeSelect').value,
+        status: document.getElementById('statusSelect').value
+      };
+      currentPage = 1;
+      renderTasks();
+    }
+
+    function resetSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('categorySelect').value = '';
+      document.getElementById('typeSelect').value = '';
+      document.getElementById('statusSelect').value = '';
+      searchParams = { keyword: '', category: '', type: '', status: '' };
+      currentPage = 1;
+      renderTasks();
+    }
+
+    const categories = [
+      { id: 'C001', name: '新手任务', taskCount: 8, sortOrder: 1, status: '启用', createTime: '2026-01-01' },
+      { id: 'C002', name: '日常任务', taskCount: 15, sortOrder: 2, status: '启用', createTime: '2026-01-01' },
+      { id: 'C003', name: '进阶任务', taskCount: 6, sortOrder: 3, status: '启用', createTime: '2026-01-01' },
+      { id: 'C004', name: '高级任务', taskCount: 4, sortOrder: 4, status: '启用', createTime: '2026-01-01' }
+    ];
+
+    function navigateTo(page) {
+      const breadcrumb = document.getElementById('breadcrumb');
+      const contentDiv = document.getElementById('pageContent');
+      
+      if (page === 'categories') {
+        breadcrumb.innerHTML = '<a href="#" onclick="navigateTo(\'tasks\')">首页</a> / <span>分类管理</span>';
+        contentDiv.innerHTML = renderCategoryPage();
+      } else {
+        breadcrumb.innerHTML = '<a href="#" onclick="navigateTo(\'tasks\')">首页</a> / <span>任务列表</span>';
+        contentDiv.innerHTML = renderTaskPage();
+        setTimeout(function() {
+          renderTasks();
+        }, 10);
+      }
+    }
+
+    function renderCategoryPage() {
+      return `
+        <div style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h1 style="font-size: 24px; color: #333; margin: 0;">分类管理</h1>
+            <button class="btn btn-primary" onclick="showCreateCategoryModal()">+ 新增分类</button>
+          </div>
+          
+          <div style="background: #fff; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">分类ID</th>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">分类名称</th>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">任务数量</th>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">排序值</th>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">状态</th>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">创建时间</th>
+                  <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${categories.map(cat => `
+                  <tr style="transition: background 0.2s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">${cat.id}</td>
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">${cat.name}</td>
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">${cat.taskCount}</td>
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">${cat.sortOrder}</td>
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">
+                      <span style="display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; ${cat.status === '启用' ? 'background: #f6ffed; color: #52c41a;' : 'background: #fff2f0; color: #ff4d4f;'}">${cat.status}</span>
+                    </td>
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">${cat.createTime}</td>
+                    <td style="padding: 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0;">
+                      <button style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 12px; border-radius: 4px; font-size: 12px; background: #1890ff; color: #fff; border: none; cursor: pointer; margin-right: 8px;" onclick="editCategory('${cat.id}')">编辑</button>
+                      <button style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 12px; border-radius: 4px; font-size: 12px; background: #ff4d4f; color: #fff; border: none; cursor: pointer;" onclick="deleteCategory('${cat.id}')">删除</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function showCreateCategoryModal() {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay show';
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+          <div class="modal-header">
+            <span class="modal-title">新增分类</span>
+            <span class="modal-close" onclick="document.body.removeChild(this.parentElement.parentElement.parentElement)">✕</span>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label"><span>*</span>分类名称</label>
+              <input type="text" class="form-input" id="categoryName" placeholder="请输入分类名称" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">排序值</label>
+              <input type="number" class="form-input" id="categorySortOrder" value="1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">状态</label>
+              <select class="select-box" id="categoryStatus">
+                <option value="启用">启用</option>
+                <option value="下线">下线</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-default" onclick="document.body.removeChild(this.parentElement.parentElement.parentElement)">取消</button>
+            <button class="btn btn-success" onclick="saveCategory()">保存分类</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function saveCategory() {
+      const name = document.getElementById('categoryName').value;
+      const sortOrder = document.getElementById('categorySortOrder').value;
+      const status = document.getElementById('categoryStatus').value;
+      
+      if (!name) {
+        showToast('请输入分类名称');
+        return;
+      }
+      
+      const newId = 'C' + String(categories.length + 1).padStart(3, '0');
+      categories.push({
+        id: newId,
+        name,
+        taskCount: 0,
+        sortOrder: parseInt(sortOrder),
+        status,
+        createTime: new Date().toISOString().split('T')[0]
+      });
+      
+      showToast('分类创建成功');
+      document.querySelector('.modal-overlay.show').remove();
+      navigateTo('categories');
+    }
+
+    function editCategory(id) {
+      const cat = categories.find(c => c.id === id);
+      if (!cat) return;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay show';
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+          <div class="modal-header">
+            <span class="modal-title">编辑分类</span>
+            <span class="modal-close" onclick="document.body.removeChild(this.parentElement.parentElement.parentElement)">✕</span>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">分类ID</label>
+              <input type="text" class="form-input" value="${cat.id}" disabled />
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span>*</span>分类名称</label>
+              <input type="text" class="form-input" id="editCategoryName" value="${cat.name}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">排序值</label>
+              <input type="number" class="form-input" id="editCategorySortOrder" value="${cat.sortOrder}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">状态</label>
+              <select class="select-box" id="editCategoryStatus">
+                <option value="启用" ${cat.status === '启用' ? 'selected' : ''}>启用</option>
+                <option value="下线" ${cat.status === '下线' ? 'selected' : ''}>下线</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-default" onclick="document.body.removeChild(this.parentElement.parentElement.parentElement)">取消</button>
+            <button class="btn btn-success" onclick="updateCategory('${id}')">保存修改</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function updateCategory(id) {
+      const cat = categories.find(c => c.id === id);
+      if (!cat) return;
+      
+      cat.name = document.getElementById('editCategoryName').value;
+      cat.sortOrder = parseInt(document.getElementById('editCategorySortOrder').value);
+      cat.status = document.getElementById('editCategoryStatus').value;
+      
+      showToast('分类更新成功');
+      document.querySelector('.modal-overlay.show').remove();
+      navigateTo('categories');
+    }
+
+    function deleteCategory(id) {
+      if (!confirm('确定要删除该分类吗？')) return;
+      
+      const index = categories.findIndex(c => c.id === id);
+      if (index > -1) {
+        categories.splice(index, 1);
+        showToast('分类删除成功');
+        navigateTo('categories');
+      }
+    }
+
+    function renderTaskPage() {
+      return `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h1 style="font-size: 24px; color: #333; margin: 0;">任务列表</h1>
+          <button class="btn btn-primary" onclick="showCreateModal()">+ 创建任务</button>
+        </div>
+        
+        <div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <input type="text" class="search-input" placeholder="搜索任务名称/ID..." id="searchInput" style="flex: 1; min-width: 200px; height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px;" onkeyup="handleSearch()" />
+          <select class="select-box" id="categorySelect" style="height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; min-width: 120px;">
+            <option value="">全部分类</option>
+            <option value="新手任务">新手任务</option>
+            <option value="日常任务">日常任务</option>
+            <option value="进阶任务">进阶任务</option>
+            <option value="高级任务">高级任务</option>
+          </select>
+          <select class="select-box" id="typeSelect" style="height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; min-width: 120px;">
+            <option value="">全部类型</option>
+            <option value="下单任务">下单任务</option>
+            <option value="金额任务">金额任务</option>
+            <option value="浏览任务">浏览任务</option>
+            <option value="页面访问任务">页面访问任务</option>
+            <option value="问卷任务">问卷任务</option>
+            <option value="分享任务">分享任务</option>
+            <option value="完善资料任务">完善资料任务</option>
+            <option value="签到任务">签到任务</option>
+            <option value="邀请任务">邀请任务</option>
+            <option value="连续任务">连续任务</option>
+            <option value="组合任务">组合任务</option>
+            <option value="场景任务">场景任务</option>
+            <option value="功能开通任务">功能开通任务</option>
+            <option value="会员保持任务">会员保持任务</option>
+            <option value="订单类型任务">订单类型任务</option>
+            <option value="时间时段任务">时间时段任务</option>
+          </select>
+          <select class="select-box" id="statusSelect" style="height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; min-width: 100px;">
+            <option value="">全部状态</option>
+            <option value="启用">启用</option>
+            <option value="下线">下线</option>
+          </select>
+          <button class="btn btn-primary" onclick="handleSearch()">搜索</button>
+          <button class="btn btn-default" onclick="resetSearch()">重置</button>
+        </div>
+        
+        <div style="background: #fff; border-radius: 8px; overflow: hidden;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">任务ID</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">任务名称</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">任务分类</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">任务类型</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">奖励</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">有效期</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">状态</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">创建时间</th>
+                <th style="padding: 16px; text-align: left; background: #fafafa; font-weight: 600; color: #666; font-size: 14px; border-bottom: 1px solid #f0f0f0;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody"></tbody>
+          </table>
+          <div class="pagination" id="pagination" style="display: flex; justify-content: flex-end; align-items: center; padding: 16px; gap: 8px;"></div>
+        </div>
+      `;
+    }
+
+    function showCreateModal() {
+      document.getElementById('modalTitle').textContent = '创建任务';
+      document.getElementById('formCategory').value = '新手任务';
+      document.getElementById('formType').value = '下单任务';
+      document.getElementById('formName').value = '';
+      document.getElementById('formSubtitle').value = '';
+      document.getElementById('formDescription').value = '';
+      document.getElementById('formSortOrder').value = '1';
+      document.getElementById('formCycleType').value = '一次性';
+      document.getElementById('formRewardType').value = '成长值';
+      document.getElementById('formRewardValue').value = '50';
+      document.getElementById('formRewardMethod').value = '自动发放';
+      document.getElementById('formValidityType').value = '永久有效';
+      document.getElementById('formValidityDays').value = '365';
+      document.getElementById('formMinLevel').value = '萌新会员';
+      document.getElementById('formTimeRule').value = '无限制';
+      document.getElementById('formRegionRule').value = '无限制';
+      
+      document.getElementById('toggleAutoReset').classList.add('active');
+      document.getElementById('toggleHistoryProgress').classList.remove('active');
+      document.getElementById('toggleBreakReset').classList.add('active');
+      document.getElementById('toggleNewUserOnly').classList.remove('active');
+      document.getElementById('toggleOldUserOnly').classList.remove('active');
+      document.getElementById('toggleStatus').classList.add('active');
+      document.getElementById('statusText').textContent = '启用';
+      document.getElementById('statusText').style.color = '#52c41a';
+
+      renderRuleConfigFields('下单任务');
+      document.getElementById('createModal').classList.add('show');
+    }
+
+    function hideCreateModal() {
+      document.getElementById('createModal').classList.remove('show');
+    }
+
+    function onCategoryChange() {
+      const category = document.getElementById('formCategory').value;
+    }
+
+    function onTaskTypeChange() {
+      const taskType = document.getElementById('formType').value;
+      renderRuleConfigFields(taskType);
+      setTimeout(() => {
+        onSceneConditionChange();
+      }, 10);
+    }
+
+    function onSceneConditionChange() {
+      const sceneCondition = document.getElementById('rule_sceneCondition').value;
+      const triggerTime = document.getElementById('rule_triggerTime').value;
+      const conditionalFields = document.querySelectorAll('.conditional-field');
+      
+      conditionalFields.forEach(field => {
+        const showIf = field.getAttribute('data-show-if');
+        if (showIf) {
+          try {
+            const condition = JSON.parse(showIf);
+            const targetKey = Object.keys(condition)[0];
+            const targetValue = condition[targetKey];
+            let shouldShow = false;
+            
+            if (targetKey === 'sceneCondition' && sceneCondition === targetValue) {
+              shouldShow = true;
+            } else if (targetKey === 'triggerTime' && triggerTime === targetValue) {
+              shouldShow = true;
+            }
+            
+            if (shouldShow) {
+              if (field.classList.contains('form-row')) {
+                field.style.display = 'flex';
+              } else {
+                field.style.display = '';
+              }
+            } else {
+              field.style.display = 'none';
+            }
+          } catch (e) {
+            field.style.display = '';
+          }
+        }
+      });
+    }
+
+    function renderRuleConfigFields(taskType) {
+      const container = document.getElementById('ruleConfigFields');
+      const config = taskTypes[taskType] || { fields: [] };
+      
+      container.innerHTML = config.fields.map(field => {
+        const showIfCondition = field.showIf ? `data-show-if="${JSON.stringify(field.showIf)}"` : '';
+        const fieldClass = field.showIf ? 'conditional-field' : '';
+        
+        if (field.type === 'row') {
+          const rowItems = field.items.map(item => {
+            const itemShowIf = item.showIf ? `data-show-if="${JSON.stringify(item.showIf)}"` : '';
+            const itemClass = item.showIf ? 'conditional-field' : '';
+            
+            if (item.type === 'number') {
+              return `<div class="form-group ${itemClass}" ${itemShowIf} style="flex: 2;"><label class="form-label">${item.label}</label><input type="number" class="form-input" placeholder="${item.placeholder || ''}" id="rule_${item.key}" value="${item.defaultValue || ''}" style="width: 100%;" /></div>`;
+            } else if (item.type === 'text') {
+              return `<div class="form-group ${itemClass}" ${itemShowIf} style="flex: 2;"><label class="form-label">${item.label}</label><input type="text" class="form-input" placeholder="${item.placeholder || ''}" id="rule_${item.key}" value="${item.defaultValue || ''}" style="width: 100%;" /></div>`;
+            } else if (item.type === 'select') {
+              const options = item.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+              return `<div class="form-group ${itemClass}" ${itemShowIf} style="flex: 1;"><label class="form-label">${item.label}</label><select class="select-box" id="rule_${item.key}" ${item.key === 'sceneCondition' || item.key === 'triggerTime' ? 'onchange="onSceneConditionChange()"' : ''} style="width: 100%;">${options}</select></div>`;
+            }
+            return '';
+          }).join('');
+          return `<div class="form-row ${fieldClass}" ${showIfCondition}>${rowItems}</div>`;
+        } else if (field.type === 'text') {
+          return `<div class="form-group full ${fieldClass}" ${showIfCondition}><label class="form-label">${field.label}</label><input type="text" class="form-input" placeholder="${field.placeholder || ''}" id="rule_${field.key}" value="${field.defaultValue || ''}" /></div>`;
+        } else if (field.type === 'select') {
+          const options = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+          return `<div class="form-group full ${fieldClass}" ${showIfCondition}><label class="form-label">${field.label}</label><select class="select-box" id="rule_${field.key}" ${field.key === 'sceneCondition' || field.key === 'triggerTime' ? 'onchange="onSceneConditionChange()"' : ''} style="width: 100%;">${options}</select></div>`;
+        } else if (field.type === 'toggle') {
+          return `<div class="form-group flex-row ${fieldClass}" ${showIfCondition}><span class="form-label">${field.label}</span><div class="toggle-switch ${field.defaultValue ? 'active' : ''}" id="rule_toggle_${field.key}" onclick="toggleSwitch(this)"></div></div>`;
+        } else if (field.type === 'checkboxes') {
+          const checkboxes = field.options.map(opt => `<div class="field-item"><input type="checkbox" id="rule_${field.key}_${opt.value}" value="${opt.value}" /><label for="rule_${field.key}_${opt.value}">${opt.label}</label></div>`).join('');
+          return `<div class="form-group full"><label class="form-label">${field.label}</label><div class="field-list">${checkboxes}</div></div>`;
+        }
+        return '';
+      }).join('');
+    }
+
+    function toggleSwitch(el) {
+      el.classList.toggle('active');
+      if (el.id === 'toggleStatus') {
+        const statusText = document.getElementById('statusText');
+        if (el.classList.contains('active')) {
+          statusText.textContent = '启用';
+          statusText.style.color = '#52c41a';
+        } else {
+          statusText.textContent = '下线';
+          statusText.style.color = '#ff4d4f';
+        }
+      }
+    }
+
+    function submitTask() {
+      const name = document.getElementById('formName').value.trim();
+      if (!name) { showToast('请输入任务名称'); return; }
+
+      const newTask = {
+        id: `T${String(tasks.length + 1).padStart(3, '0')}`,
+        name,
+        category: document.getElementById('formCategory').value,
+        type: document.getElementById('formType').value,
+        reward: `+${document.getElementById('formRewardValue').value} ${document.getElementById('formRewardType').value}`,
+        validity: document.getElementById('formValidityType').value === '永久有效' ? '永久' : `${document.getElementById('formValidityDays').value}天`,
+        status: document.getElementById('toggleStatus').classList.contains('active') ? '启用' : '下线',
+        createTime: new Date().toLocaleString('zh-CN')
+      };
+
+      tasks.unshift(newTask);
+      showToast('任务创建成功');
+      hideCreateModal();
+      renderTasks();
+    }
+
+    function editTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+
+      document.getElementById('modalTitle').textContent = '编辑任务';
+      document.getElementById('formCategory').value = task.category;
+      document.getElementById('formType').value = task.type;
+      document.getElementById('formName').value = task.name;
+      document.getElementById('toggleStatus').classList.toggle('active', task.status === '启用');
+      
+      const statusText = document.getElementById('statusText');
+      if (task.status === '启用') {
+        statusText.textContent = '启用';
+        statusText.style.color = '#52c41a';
+      } else {
+        statusText.textContent = '下线';
+        statusText.style.color = '#ff4d4f';
+      }
+
+      renderRuleConfigFields(task.type);
+      document.getElementById('createModal').classList.add('show');
+    }
+
+    function viewTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      alert(`任务详情：\n\nID: ${task.id}\n名称: ${task.name}\n分类: ${task.category}\n类型: ${task.type}\n奖励: ${task.reward}\n有效期: ${task.validity}\n状态: ${task.status}\n创建时间: ${task.createTime}`);
+    }
+
+    function toggleStatus(id) {
+      tasks = tasks.map(t => ({ ...t, status: t.id === id ? (t.status === '启用' ? '下线' : '启用') : t.status }));
+      showToast('状态已更新');
+      renderTasks();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTasks();
+      renderRuleConfigFields('下单任务');
+    });
+  </script>
+</body>
+</html>
